@@ -1,39 +1,21 @@
-import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
-// import { logAudit } from "@/lib/audit/logger";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
-  const { email, password } = await req.json();
+  const { email, password, firstName, lastName, phone } = await req.json();
 
-  if (!email || password.length < 8) {
-    return NextResponse.json(
-      { error: "Invalid credentials" },
-      { status: 400 }
-    );
-  }
+  const supabase = await createSupabaseServerClient();
 
-  const { data, error } =
-    await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
-    });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { firstName, lastName, phone },
+    },
+  });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 });
+    return Response.json({ error: error.message }, { status: 400 });
   }
 
-//   await supabaseAdmin.from("profiles").insert({
-//     id: data.user.id,
-//     email,
-//     role: "user",
-//   });
-
-//   await logAudit({
-//     userId: data.user.id,
-//     action: "USER_SIGNUP",
-//     ip: req.headers.get("x-forwarded-for") ?? "",
-//     userAgent: req.headers.get("user-agent") ?? "",
-//   });
-
-  return NextResponse.json({ message: "Signup successful" }, { status: 201 });
+  return Response.json({ user: data.user });
 }

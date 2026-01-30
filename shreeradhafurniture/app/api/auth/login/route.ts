@@ -1,18 +1,44 @@
-import { createSupabaseServerClient} from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export async function POST(req: Request) {
-  const { email, password } = await req.json();
+type LoginWithPasswordParams = {
+  email: string;
+  password: string;
+};
 
-  const supabase = await createSupabaseServerClient(); // ✅ await
+type LoginWithPhoneParams = {
+  phone: string;
+  password: string;
+};
 
-  const { error } = await supabase.auth.signInWithPassword({
+export async function loginWithPassword({
+  email,
+  password,
+}: LoginWithPasswordParams) {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
 
   if (error) {
-    return Response.json({ error: error.message }, { status: 401 });
+    throw new Error(error.message);
   }
 
-  return Response.json({ success: true });
+  return data;
+}
+
+export async function LoginWithPhone({ phone, password }: LoginWithPhoneParams) {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    phone,
+    password,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
 }
